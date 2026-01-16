@@ -1,0 +1,118 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Affaldsortering3"
+        mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="650"
+        x:Class="Affaldsortering3.MainWindow"
+        x:DataType="local:MainWindow"
+        Title="SystemLogin">
+
+    <Grid RowDefinitions="Auto,*" Margin="16">
+
+        <!-- Top bar -->
+        <DockPanel Grid.Row="0" Margin="0,0,0,12">
+            <TextBlock FontSize="22" FontWeight="Bold" Text="Robot Sorting System" DockPanel.Dock="Left"/>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                <Button Content="Logout" Click="Logout_Click" IsVisible="{Binding IsLoggedIn}"/>
+                <Button Content="Clear log" Click="ClearLog_Click" IsVisible="{Binding IsAdmin}"/>
+            </StackPanel>
+        </DockPanel>
+
+        <!-- Content -->
+        <Grid Grid.Row="1">
+
+            <!-- LOGIN VIEW -->
+            <Border IsVisible="{Binding ShowLogin}" Padding="18" CornerRadius="8" BorderThickness="1">
+                <StackPanel Spacing="10">
+                    <TextBlock FontSize="26" Text="Login" FontWeight="Bold"/>
+                    <TextBlock Text="Username"/>
+                    <TextBox Text="{Binding LoginUsername}"/>
+                    <TextBlock Text="Password"/>
+                    <TextBox Text="{Binding LoginPassword}" PasswordChar="●"/>
+                    <Button Content="Login" Click="Login_Click" Width="160"/>
+                    <TextBlock Text="{Binding LoginError}" Foreground="Red"/>
+                </StackPanel>
+            </Border>
+
+            <!-- APP VIEW -->
+            <Border IsVisible="{Binding ShowApp}" Padding="0" CornerRadius="8">
+                <TabControl>
+
+                    <!-- Robot -->
+                    <TabItem Header="Robot">
+                        <StackPanel Margin="12" Spacing="10">
+                            <TextBlock FontSize="22" FontWeight="Bold" Text="Robot kontrol"/>
+                            <TextBlock Text="Her kan du starte robot-programmet."/>
+
+                            <Button Content="Start Robot" Click="RunRobot_Click" Width="320"/>
+
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Button Content="Power On" Click="PowerOn_Click" Width="120"/>
+                                <Button Content="Brake Release" Click="BrakeRelease_Click" Width="140"/>
+                            </StackPanel>
+
+                            <!-- NYE knapper -->
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Button Content="Stop" Click="Stop_Click" Width="120"/>
+                                <Button Content="EMERGENCY STOP" Click="EmergencyStop_Click" Width="180"/>
+                            </StackPanel>
+
+                            <TextBlock Text="{Binding RobotStatus}" />
+                        </StackPanel>
+                    </TabItem>
+
+                    <!-- Users (kun admin) -->
+                    <TabItem Header="Users" IsVisible="{Binding IsAdmin}">
+                        <Grid Margin="12" RowDefinitions="Auto,Auto,*" ColumnDefinitions="2*,3*"
+                              ColumnSpacing="14" RowSpacing="10">
+
+                            <TextBlock Grid.Row="0" Grid.ColumnSpan="2"
+                                       FontSize="22" FontWeight="Bold"
+                                       Text="Create user (Admin)"/>
+
+                            <StackPanel Grid.Row="1" Grid.Column="0" Spacing="8">
+                                <TextBlock Text="Username"/>
+                                <TextBox Text="{Binding NewUserUsername}"/>
+                                <TextBlock Text="Password"/>
+                                <TextBox Text="{Binding NewUserPassword}" PasswordChar="●"/>
+                                <CheckBox Content="Is Admin?" IsChecked="{Binding NewUserIsAdmin}"/>
+                                <Button Content="Create user" Click="CreateUser_Click" Width="160"/>
+                                <TextBlock Text="{Binding UserCreateError}" Foreground="Red"/>
+                            </StackPanel>
+
+                            
+                        </Grid>
+                    </TabItem>
+
+                    <!-- Database (kun admin) - LOG -->
+                    <TabItem Header="Database" IsVisible="{Binding IsAdmin}">
+                        <Grid Margin="12" RowDefinitions="Auto,*" RowSpacing="12">
+
+                            <TextBlock Grid.Row="0"
+                                       FontSize="22"
+                                       FontWeight="Bold"
+                                       Text="Systemhistorik"/>
+
+                            <Border Grid.Row="1" Padding="10" CornerRadius="8" BorderThickness="1">
+                                <ScrollViewer>
+                                    <ItemsControl ItemsSource="{Binding UiLog}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding}" TextWrapping="Wrap"/>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+                            </Border>
+
+                        </Grid>
+                    </TabItem>
+
+                </TabControl>
+            </Border>
+
+        </Grid>
+    </Grid>
+</Window>
