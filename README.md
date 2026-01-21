@@ -34,11 +34,14 @@ Almindelig bruger:
 - Power on / Brake release
 - Stop / Emergency stop
 - Overvåge systemstatus
+
 Administrator:
 - Oprette og administrere brugere
 - Se databaseindhold og systemlog
 - Fuld adgang til alle faner
+
 GUI’en viser kun funktioner, der matcher brugerens rolle.
+
 
 Sikkerhed
 
@@ -47,7 +50,9 @@ Sikkerhed
 - Adgangskoder hashes og saltes
 - Bruger- og logdata gemmes i database
 - Loginforsøg (succes/fejl) logges
+
 Systemet er designet som et OT-system med fokus på kontrolleret adgang.
+
 
 Database
 
