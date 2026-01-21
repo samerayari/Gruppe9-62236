@@ -1,10 +1,22 @@
+<!--
+Denne fil bestemmer hvordan appen ser ud.
+Den kører automatisk, når man trykker Run i Rider.
+-->
+
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="Affaldsortering3.App"
-             RequestedThemeVariant="Default">
-             <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
+            
+             x:Class="Affaldsortering3.App"
+
+            
+             RequestedThemeVariant="Default">
+
+    <!-- Her vælger vi appens udseende -->
     <Application.Styles>
+
+        <!-- Giver appen et moderne Windows-look -->
         <FluentTheme />
+
     </Application.Styles>
 </Application>

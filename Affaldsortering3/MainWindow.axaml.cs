@@ -1,31 +1,46 @@
-using System;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
-using Avalonia.Controls;
-using Avalonia.Interactivity;
-using Affaldsortering3.Data;
 
-namespace Affaldsortering3;
+// Fil: MainWindow.axaml.cs
+// Denne fil er “hjernen” bag jeres GUI (MainWindow.axaml).
+// Her ligger alt der sker når man klikker på knapperne: login, logout, opret bruger, robot-knapper og log.
+// DataContext = this gør at XAML kan bruge jeres properties (fx IsLoggedIn, IsAdmin, UiLog osv.)
+
+using System;
+using System.Collections.ObjectModel; 
+using System.ComponentModel;      
+using System.Runtime.CompilerServices; 
+using System.Threading.Tasks;       
+using Avalonia.Controls;           
+using Avalonia.Interactivity;      
+using Affaldsortering3.Data;          
+
+namespace Affaldsortering3; 
 
 public partial class MainWindow : Window, INotifyPropertyChanged
 {
     // Database + services
+    // _db = forbindelsen til databasen (app.db)
+    // _hasher = laver password om til hash + salt (så vi ikke gemmer "rent" password)
+    // _accountService = hjælper med brugere (opret, valider login, hent brugere)
+    // _loginEventService = gemmer login-hændelser (success/fail) i databasen
     private readonly AppDbContext _db = new();
     private readonly PasswordHasher _hasher = new();
     private readonly AccountService _accountService;
     private readonly LoginEventService _loginEventService;
 
     // Robot
+    // _robot = jeres robot-klasse der kan connecte og sende URScript-kommandoer
     private readonly Robot _robot;
 
     // UI collections
+    // UiLog = tekst-liste der vises i Database-fanen (Systemhistorik)
+    // Users = liste over brugere (kan bruges i admin-delen)
+    // LoginEvents = liste over login-hændelser (kan bruges i admin-delen)
     public ObservableCollection<string> UiLog { get; } = new();
     public ObservableCollection<Account> Users { get; } = new();
     public ObservableCollection<LoginEvent> LoginEvents { get; } = new();
 
     // State
+    // IsLoggedIn styrer om login-skærmen eller app-skærmen vises
     private bool _isLoggedIn;
     public bool IsLoggedIn
     {
@@ -33,12 +48,13 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         set
         {
             _isLoggedIn = value;
-            OnPropertyChanged();
-            OnPropertyChanged(nameof(ShowLogin));
-            OnPropertyChanged(nameof(ShowApp));
+            OnPropertyChanged();                 // opdaterer IsLoggedIn i GUI
+            OnPropertyChanged(nameof(ShowLogin)); // opdaterer ShowLogin
+            OnPropertyChanged(nameof(ShowApp));   // opdaterer ShowApp
         }
     }
 
+    // IsAdmin styrer om admin-faner/knapper vises (Users + Database + Clear log)
     private bool _isAdmin;
     public bool IsAdmin
     {
@@ -46,9 +62,13 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         set { _isAdmin = value; OnPropertyChanged(); }
     }
 
+    // “Hjælpe”-properties til XAML:
+    // ShowLogin = vis login når man IKKE er logget ind
+    // ShowApp = vis app når man ER logget ind
     public bool ShowLogin => !IsLoggedIn;
     public bool ShowApp => IsLoggedIn;
 
+    // Login felter (bundet til TextBox i XAML)
     private string _loginUsername = "";
     public string LoginUsername
     {
@@ -63,6 +83,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         set { _loginPassword = value; OnPropertyChanged(); }
     }
 
+    // Fejltekst på login-skærmen
     private string _loginError = "";
     public string LoginError
     {
@@ -70,6 +91,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         set { _loginError = value; OnPropertyChanged(); }
     }
 
+    // Admin: opret bruger felter (bundet til Users-fanen)
     private string _newUserUsername = "";
     public string NewUserUsername
     {
@@ -91,6 +113,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         set { _newUserIsAdmin = value; OnPropertyChanged(); }
     }
 
+    // Fejltekst ved “Create user”
     private string _userCreateError = "";
     public string UserCreateError
     {
@@ -98,6 +121,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         set { _userCreateError = value; OnPropertyChanged(); }
     }
 
+    // Tekst der vises på Robot-fanen (status for forbindelse)
     private string _robotStatus = "";
     public string RobotStatus
     {
@@ -105,22 +129,29 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         set { _robotStatus = value; OnPropertyChanged(); }
     }
 
+    // Bruges så GUI automatisk opdaterer når properties ændres
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public MainWindow()
     {
-        InitializeComponent();
-        DataContext = this;
+        InitializeComponent(); // loader XAML-designet
+        DataContext = this;    // gør at XAML kan “binde” til properties i denne klasse
 
+        // Vi laver services, så vi kan arbejde med databasen på en pæn måde
         _accountService = new AccountService(_db, _hasher);
         _loginEventService = new LoginEventService(_db);
 
+        // Robot-objektet bliver lavet her
         _robot = new Robot();
 
+        // Forsøger at connecte robotten med det samme når programmet starter
         TryConnectRobot();
+
+        // Starter init af databasen (async)
         _ = InitAsync();
     }
 
+    // Init: sikrer at databasen findes og at admin-bruger findes
     private async Task InitAsync()
     {
         try
@@ -134,6 +165,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
     }
 
+    // Prøver at forbinde til robotten og sætter status-tekst
     private void TryConnectRobot()
     {
         try
@@ -149,6 +181,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
     }
 
+    // Lægger en ny linje i loggen (øverst) med tidspunkt
     private void AddLog(string message)
     {
         UiLog.Insert(0, $"{DateTime.Now:dd-MM-yy HH.mm.ss} | {message}");
@@ -157,31 +190,37 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     
     // Login / Logout
     
+    // Kører når man trykker “Login” på login-skærmen
     private async void Login_Click(object? sender, RoutedEventArgs e)
     {
         LoginError = "";
 
         try
         {
+            // Tjekker i databasen om username + password passer
             var (ok, isAdmin) =
                 await _accountService.ValidateAsync(LoginUsername, LoginPassword);
 
             if (!ok)
             {
+                // Gemmer i databasen at login fejlede
                 await _loginEventService.AddAsync(LoginUsername, false, "Wrong credentials");
                 LoginError = "Forkert username eller password.";
                 AddLog($"LOGIN FAIL: {LoginUsername}");
                 return;
             }
 
+            // Login lykkedes: vi skifter visning fra login til app
             IsLoggedIn = true;
             IsAdmin = isAdmin;
 
+            // Gemmer i databasen at login lykkedes
             await _loginEventService.AddAsync(
                 LoginUsername, true, $"Logged in. Admin={IsAdmin}");
 
             AddLog($"{LoginUsername} logged in. Admin={IsAdmin}");
 
+            // Hvis admin, så henter vi admin-data (brugere + events)
             await RefreshAdminDataAsync();
         }
         catch (Exception ex)
@@ -191,21 +230,26 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
         finally
         {
+            // Vi nulstiller password-feltet efter login
             LoginPassword = "";
         }
     }
 
+    // Kører når man trykker “Logout”
     private void Logout_Click(object? sender, RoutedEventArgs e)
     {
         AddLog("Logged out.");
 
+        // Skifter tilbage til login-visning og fjerner admin-rettigheder
         IsLoggedIn = false;
         IsAdmin = false;
 
+        // Rydder felter og fejl
         LoginUsername = "";
         LoginPassword = "";
         LoginError = "";
 
+        // Rydder lister (så admin-data ikke bliver hængende)
         Users.Clear();
         LoginEvents.Clear();
     }
@@ -213,6 +257,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
   
     // Admin
    
+    // Henter admin-data fra databasen (kun hvis IsAdmin = true)
     private async Task RefreshAdminDataAsync()
     {
         if (!IsAdmin) return;
@@ -226,10 +271,12 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             LoginEvents.Add(ev);
     }
 
+    // Kører når admin trykker “Create user”
     private async void CreateUser_Click(object? sender, RoutedEventArgs e)
     {
         UserCreateError = "";
 
+        // Ekstra sikkerhed: kun admin må oprette
         if (!IsAdmin)
         {
             UserCreateError = "Kun admin kan oprette brugere.";
@@ -238,15 +285,18 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
         try
         {
+            // Opretter bruger i databasen (hash + salt sker i AccountService)
             await _accountService.CreateUserAsync(
                 NewUserUsername, NewUserPassword, NewUserIsAdmin);
 
             AddLog($"User created: {NewUserUsername} (Admin={NewUserIsAdmin})");
 
+            // Rydder felterne efter oprettelse
             NewUserUsername = "";
             NewUserPassword = "";
             NewUserIsAdmin = false;
 
+            // Opdaterer admin-data igen (så man kan se ændringer)
             await RefreshAdminDataAsync();
         }
         catch (Exception ex)
@@ -256,8 +306,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
     }
 
- 
-
+    // Admin-knap til at rydde UI-loggen
     private void ClearLog_Click(object? sender, RoutedEventArgs e)
     {
         if (!IsAdmin) return;
@@ -268,10 +317,13 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     
     // Robot
    
+    // Kører når man trykker “Start Robot”
+    // Sender robot.script filen til robotten, så robotprogrammet starter
     private void RunRobot_Click(object? sender, RoutedEventArgs e)
     {
         try
         {
+            // Hvis robot ikke er connected, prøv igen
             if (!_robot.Connected)
                 TryConnectRobot();
 
@@ -284,6 +336,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
     }
 
+    // Kører når man trykker “Power On”
     private void PowerOn_Click(object? sender, RoutedEventArgs e)
     {
         try
@@ -297,6 +350,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
     }
 
+    // Kører når man trykker “Brake Release”
     private void BrakeRelease_Click(object? sender, RoutedEventArgs e)
     {
         try
@@ -310,7 +364,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
     }
 
-    // NY: Stop (normal)
+    // Stop-knap: stopper programmet “normalt”
     private void Stop_Click(object? sender, RoutedEventArgs e)
     {
         try
@@ -324,7 +378,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
     }
 
-    // NY: Emergency stop (software)
+    // Emergency stop: “hård” stop via software
     private void EmergencyStop_Click(object? sender, RoutedEventArgs e)
     {
         try
@@ -339,6 +393,9 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     }
 
     // INotifyPropertyChanged
+    // Dette er det der “fortæller” GUI’en: “nu har en værdi ændret sig”
+    // Så opdaterer Avalonia automatisk det, der er bundet i XAML
     private void OnPropertyChanged([CallerMemberName] string? name = null)
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }
+

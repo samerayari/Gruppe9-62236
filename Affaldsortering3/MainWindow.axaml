@@ -1,3 +1,10 @@
+<!--
+Fil: MainWindow.axaml
+Dette er GUI-designet (layoutet) for hele programmet.
+Her bestemmer vi hvad der vises på skærmen: login-side, faner og knapper.
+Knapperne kalder metoder i MainWindow.axaml.cs (fx Login_Click, RunRobot_Click osv.)
+-->
+
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -8,9 +15,19 @@
         x:DataType="local:MainWindow"
         Title="SystemLogin">
 
+    <!--
+    Hoved-grid: 2 rækker
+    Row 0 = top bar (titel + knapper)
+    Row 1 = alt indhold (login eller app)
+    -->
     <Grid RowDefinitions="Auto,*" Margin="16">
 
         <!-- Top bar -->
+        <!--
+        Øverst: Titel til venstre og knapper til højre
+        Logout vises kun når man er logget ind
+        Clear log vises kun når man er admin
+        -->
         <DockPanel Grid.Row="0" Margin="0,0,0,12">
             <TextBlock FontSize="22" FontWeight="Bold" Text="Robot Sorting System" DockPanel.Dock="Left"/>
 
@@ -24,6 +41,11 @@
         <Grid Grid.Row="1">
 
             <!-- LOGIN VIEW -->
+            <!--
+            Denne del er login-skærmen.
+            Den vises når ShowLogin = true (altså når man IKKE er logget ind).
+            TextBox felterne er bundet til LoginUsername og LoginPassword i MainWindow.cs
+            -->
             <Border IsVisible="{Binding ShowLogin}" Padding="18" CornerRadius="8" BorderThickness="1">
                 <StackPanel Spacing="10">
                     <TextBlock FontSize="26" Text="Login" FontWeight="Bold"/>
@@ -32,15 +54,27 @@
                     <TextBlock Text="Password"/>
                     <TextBox Text="{Binding LoginPassword}" PasswordChar="●"/>
                     <Button Content="Login" Click="Login_Click" Width="160"/>
+                    <!-- Her vises fejl hvis login ikke virker -->
                     <TextBlock Text="{Binding LoginError}" Foreground="Red"/>
                 </StackPanel>
             </Border>
 
             <!-- APP VIEW -->
+            <!--
+            Denne del er selve programmet.
+            Den vises når ShowApp = true (altså når man ER logget ind).
+            Indeholder faner (TabControl).
+            -->
             <Border IsVisible="{Binding ShowApp}" Padding="0" CornerRadius="8">
                 <TabControl>
 
                     <!-- Robot -->
+                    <!--
+                    Robot-fanen: her kan man styre robotten.
+                    Knapperne kalder metoder i MainWindow.axaml.cs:
+                    RunRobot_Click, PowerOn_Click, BrakeRelease_Click, Stop_Click, EmergencyStop_Click
+                    RobotStatus viser tekst fra variablen RobotStatus i MainWindow.cs
+                    -->
                     <TabItem Header="Robot">
                         <StackPanel Margin="12" Spacing="10">
                             <TextBlock FontSize="22" FontWeight="Bold" Text="Robot kontrol"/>
@@ -64,6 +98,12 @@
                     </TabItem>
 
                     <!-- Users (kun admin) -->
+                    <!--
+                    Users-fanen er kun synlig for admin (IsVisible={Binding IsAdmin}).
+                    Her kan admin oprette nye brugere:
+                    Felterne er bundet til NewUserUsername, NewUserPassword og NewUserIsAdmin i MainWindow.cs
+                    Create user knappen kalder CreateUser_Click i MainWindow.axaml.cs
+                    -->
                     <TabItem Header="Users" IsVisible="{Binding IsAdmin}">
                         <Grid Margin="12" RowDefinitions="Auto,Auto,*" ColumnDefinitions="2*,3*"
                               ColumnSpacing="14" RowSpacing="10">
@@ -79,6 +119,7 @@
                                 <TextBox Text="{Binding NewUserPassword}" PasswordChar="●"/>
                                 <CheckBox Content="Is Admin?" IsChecked="{Binding NewUserIsAdmin}"/>
                                 <Button Content="Create user" Click="CreateUser_Click" Width="160"/>
+                                <!-- Her vises fejl hvis bruger ikke kan oprettes -->
                                 <TextBlock Text="{Binding UserCreateError}" Foreground="Red"/>
                             </StackPanel>
 
@@ -87,6 +128,11 @@
                     </TabItem>
 
                     <!-- Database (kun admin) - LOG -->
+                    <!--
+                    Database-fanen er også kun synlig for admin.
+                    Den viser en log (UiLog), som er en liste af tekst-linjer.
+                    ScrollViewer gør at man kan scrolle op/ned i historikken.
+                    -->
                     <TabItem Header="Database" IsVisible="{Binding IsAdmin}">
                         <Grid Margin="12" RowDefinitions="Auto,*" RowSpacing="12">
 
@@ -116,3 +162,5 @@
         </Grid>
     </Grid>
 </Window>
+
+
