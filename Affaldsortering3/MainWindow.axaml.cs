@@ -1,6 +1,6 @@
 
 // Fil: MainWindow.axaml.cs
-// Denne fil er “hjernen” bag jeres GUI (MainWindow.axaml).
+// Denne fil er “hjernen” bag vores GUI (MainWindow.axaml).
 // Her ligger alt der sker når man klikker på knapperne: login, logout, opret bruger, robot-knapper og log.
 // DataContext = this gør at XAML kan bruge jeres properties (fx IsLoggedIn, IsAdmin, UiLog osv.)
 
