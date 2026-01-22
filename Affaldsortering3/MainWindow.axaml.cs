@@ -2,7 +2,7 @@
 // Fil: MainWindow.axaml.cs
 // Denne fil er “hjernen” bag vores GUI (MainWindow.axaml).
 // Her ligger alt der sker når man klikker på knapperne: login, logout, opret bruger, robot-knapper og log.
-// DataContext = this gør at XAML kan bruge jeres properties (fx IsLoggedIn, IsAdmin, UiLog osv.)
+// DataContext = this gør at XAML kan bruge vores properties (fx IsLoggedIn, IsAdmin, UiLog osv.)
 
 using System;
 using System.Collections.ObjectModel; 
@@ -28,7 +28,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     private readonly LoginEventService _loginEventService;
 
     // Robot
-    // _robot = jeres robot-klasse der kan connecte og sende URScript-kommandoer
+    // _robot = vores robot-klasse der kan connecte og sende URScript-kommandoer
     private readonly Robot _robot;
 
     // UI collections
